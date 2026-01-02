@@ -6,15 +6,9 @@ set -e
 #  MADE BY IamAman (dont copy)
 # ===============================
 
-# ---- Safety ----
-if [ -z "$BASH_VERSION" ]; then
-  echo "❌ Please run using bash"
-  exit 1
-fi
-
 # ---- Config ----
 APP_DIR="/opt/statuspage"
-REPO_URL="https://github.com/IamGunpoint/statuspage.git"
+SERVER_URL="https://raw.githubusercontent.com/IamGunpoint/statuspage/main/server.js"
 
 # ---- Colors ----
 GREEN="\e[32m"
@@ -27,10 +21,9 @@ RESET="\e[0m"
 
 clear
 
-# ---- Banner ----
 echo -e "${MAGENTA}${BOLD}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo " 🚀 STATUS PAGE AUTO INSTALLER"
+echo " 🚀 STATUS PAGE INSTALLER"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo -e "${RESET}"
 echo -e " 🛠️  MADE BY ${BOLD}IamAman${RESET} ${RED}(dont copy)${RESET}\n"
@@ -46,14 +39,13 @@ sleep 1
 # ---- Dependencies ----
 echo -e "${YELLOW}⚙️  Checking system...${RESET}"
 
-if ! command -v git >/dev/null 2>&1; then
-  echo -e "${CYAN}📦 Installing Git...${RESET}"
+if ! command -v curl >/dev/null 2>&1; then
   apt update -y >/dev/null 2>&1
-  apt install -y git >/dev/null 2>&1
+  apt install -y curl >/dev/null 2>&1
 fi
 
 if ! command -v node >/dev/null 2>&1; then
-  echo -e "${CYAN}📦 Installing Node.js & npm...${RESET}"
+  echo -e "${CYAN}📦 Installing Node.js...${RESET}"
   curl -fsSL https://deb.nodesource.com/setup_20.x | bash - >/dev/null 2>&1
   apt install -y nodejs >/dev/null 2>&1
   echo -e "${GREEN}✅ Node.js installed${RESET}"
@@ -61,18 +53,19 @@ else
   echo -e "${GREEN}✅ Node.js already installed${RESET}"
 fi
 
-# ---- Clone Repo ----
-echo -e "\n${CYAN}📥 Downloading Status Page...${RESET}"
-
-if [ ! -d "$APP_DIR" ]; then
-  git clone "$REPO_URL" "$APP_DIR" >/dev/null 2>&1
-else
-  echo -e "${YELLOW}⚠️  Existing install found, updating...${RESET}"
-  cd "$APP_DIR"
-  git pull >/dev/null 2>&1
-fi
-
+# ---- App Dir ----
+mkdir -p "$APP_DIR"
 cd "$APP_DIR"
+
+# ---- Download server.js ----
+echo -e "\n${CYAN}📥 Downloading server.js...${RESET}"
+
+curl -fsSL "$SERVER_URL" -o server.js
+
+if [ ! -f server.js ]; then
+  echo -e "${RED}❌ Failed to download server.js${RESET}"
+  exit 1
+fi
 
 # ---- npm ----
 if [ ! -f package.json ]; then
@@ -81,7 +74,7 @@ fi
 
 npm install express >/dev/null 2>&1
 
-# ---- Branding Injection ----
+# ---- Branding ----
 echo -e "${YELLOW}🧩 Applying branding...${RESET}"
 
 sed -i "s/NexusNode/$COMPANY/g" server.js
@@ -90,13 +83,13 @@ sed -i "s/iamaman/IamAman/g" server.js
 
 echo -e "${GREEN}✅ Branding applied${RESET}\n"
 
-# ---- Finish ----
+# ---- Start ----
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo -e " 🟢 SERVER IS LIVE"
 echo -e " 🏢 $COMPANY"
 echo -e " 🌐 $WEBSITE"
+echo -e " 📂 $APP_DIR/server.js"
 echo -e " 🛠️  MADE BY IamAman (dont copy)"
 echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"
 
-# ---- Start Server ----
-node server.js
+node "$APP_DIR/server.js"
